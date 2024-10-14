@@ -103,15 +103,18 @@ def get_player_name():
 
 
 def game_over(score: int, player_name: str):
-    # Add the player to database
+    # Add the player to the database
     firebase = Firebase()
     firebase.add_player_to_db(name=player_name, score=score)
 
-    # Get highscore list from database
+    # Get high score list from the database
     highscore_list = firebase.get_sorted_highscore_list_from_db(5)
 
-    # creating font object my_font
+    # Create a font object
     my_font = pygame.font.SysFont("times new roman", 50)
+
+    # Clear the screen
+    SCREEN.fill(BLACK)
 
     # Display the high scores
     highscore_surface = my_font.render("High Scores:", True, WHITE)
@@ -130,14 +133,13 @@ def game_over(score: int, player_name: str):
         )
         SCREEN.blit(score_surface, score_rect)
 
-    # creating a text surface on whhich will be drawn
+    # Create the game over text surface
     game_over_surface = my_font.render(
         f"{player_name}, your score is: {score}", True, RED
     )
     restart_surface = my_font.render("Press R to Restart or Q to Quit", True, WHITE)
 
-    # create a rectangular object for the text
-    # surface object
+    # Create rectangular objects for the text surfaces
     game_over_rect = game_over_surface.get_rect(
         center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
     )
@@ -146,9 +148,10 @@ def game_over(score: int, player_name: str):
     )
 
     # Blit the game over text and restart instructions on the screen
-    SCREEN.fill(BLACK)  # Clear the screen
     SCREEN.blit(game_over_surface, game_over_rect)
     SCREEN.blit(restart_surface, restart_rect)
+
+    # Update the display
     pygame.display.flip()
 
     # Wait for player input
