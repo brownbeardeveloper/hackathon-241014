@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+import time
 
 
 class Firebase:
@@ -31,7 +32,7 @@ class Firebase:
         except Exception as e:
             print(e)  # TODO: make a better error handling here...
 
-    def read_data(self, highscore_list: list):
+    def _read_data(self, highscore_list: list):
         """
         Fetches user data from the 'users' collection in Firestore and appends
         tuples of 'name' and 'score' to the provided highscore_list.
@@ -56,6 +57,21 @@ class Firebase:
             # Check if both 'name' and 'score' are present
             if "name" in data and "score" in data:
                 highscore_list.append((data["name"], data["score"]))
+
+    def get_player_list_from_db(self):
+        """
+        Retrieve a list of players from the database.
+
+        This method initializes an empty list for players and retrieves data from
+        the database by calling the _read_data method. It returns the populated
+        player list.
+
+        Returns:
+            list: A list of players retrieved from the database.
+                  The list may be empty if no data is found.
+        """
+        player_list = []
+        return self._read_data(player_list)
 
     def get_sorted_highscore(self, highscore_list: list, limit: int) -> None:
         """
@@ -116,24 +132,21 @@ class Firebase:
 
 
 if __name__ == "__main__":
-    db = Firebase()  # Initialize Firebase
-    name_list = []  # Set up a list
-    db.read_data(name_list)  # Retrieve the data from the database
-    print(name_list)
-    print("*******")
+    # Initialize Firebase
+    db = Firebase()
 
-    # Sort the list and set a limit for how many players should be in the list
+    # Retrieve the list of player names and scores from the database
+    name_list = db.get_player_list_from_db()
+    print(name_list)  # Display the current list of players
+
+    # Sort the list of players and limit it to the top 5 high scores
     db.get_sorted_highscore(name_list, 5)
-    print(name_list)
-    print("*******")
+    print(name_list)  # Display the sorted list of top players
 
+    # Prompt the user for a new player's name and score
     player = input("Enter player's name: ").title()
     score = int(input("Enter score: "))
 
+    # Add the player's score to the database and confirm success
     if db.add_player_score(player, score):
-        print("Succe")
-        print("*******")
-
-    db.read_data(name_list)
-    db.get_sorted_highscore(name_list, 5)
-    print(name_list)
+        print("Score added successfully!")
