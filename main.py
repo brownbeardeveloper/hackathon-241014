@@ -1,6 +1,6 @@
 import pygame
 import random
-from services.firebase import Firebase
+from firestore.firebase import Firebase
 
 # RGB (Red, Green, Blue)
 WHITE = (255, 255, 255)
@@ -42,7 +42,7 @@ def pause_game() -> None:
     """
     paused = True
     font_style = pygame.font.SysFont("bahnschrift", 50)
-    message = font_style.render("Paused. Press P to Resume", True, WHITE)
+    message = font_style.render("Paused. Press P to Resume.", True, WHITE)
     # Overlays a pause screen on top of the gameplay surface.
     SCREEN.blit(message, [SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2])
     pygame.display.update()
