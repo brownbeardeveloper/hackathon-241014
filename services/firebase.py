@@ -58,22 +58,27 @@ class Firebase:
             if "name" in data and "score" in data:
                 highscore_list.append((data["name"], data["score"]))
 
-    def get_player_list_from_db(self):
+    def get_sorted_player_list_from_db(self, limit: int):
         """
-        Retrieve a list of players from the database.
+        Retrieve and sort a list of players from the database.
 
-        This method initializes an empty list for players and retrieves data from
-        the database by calling the _read_data method. It returns the populated
-        player list.
+        This method initializes an empty list for players, retrieves data from the
+        database by calling the _read_data method, sorts the player list based on
+        high scores, and limits the results to the specified number of top players.
+
+        Args:
+            limit (int): The maximum number of high scores to retain in the sorted list.
 
         Returns:
-            list: A list of players retrieved from the database.
-                  The list may be empty if no data is found.
+            list: A sorted list of players retrieved from the database, limited
+                  to the top 'limit' scores. The list may be empty if no data is found.
         """
         player_list = []
-        return self._read_data(player_list)
+        self._read_data(player_list)
+        self._set_sorted_highscore(player_list, limit)
+        return player_list
 
-    def get_sorted_highscore(self, highscore_list: list, limit: int) -> None:
+    def _set_sorted_highscore(self, highscore_list: list, limit: int) -> None:
         """
         Sort the highscore list in descending order and limit it to the top 'limit' entries.
 
@@ -86,12 +91,12 @@ class Firebase:
             None: This method modifies the highscore_list in place.
         """
         # Sort the highscore list in descending order based on player scores
-        highscore_list.sort(key=self.get_score, reverse=True)
+        highscore_list.sort(key=self._get_score, reverse=True)
 
         # Limit the list to the top 'limit' entries
         del highscore_list[limit:]
 
-    def get_score(self, player: tuple):
+    def _get_score(self, player: tuple):
         """
         Retrieve the score of a player.
 
@@ -104,7 +109,7 @@ class Firebase:
         """
         return player[1]
 
-    def add_player_score(self, name: str, score: int) -> bool:
+    def add_player_to_db(self, name: str, score: int) -> bool:
         """
         Add a player's score to the Firestore database.
 
@@ -136,17 +141,13 @@ if __name__ == "__main__":
     db = Firebase()
 
     # Retrieve the list of player names and scores from the database
-    name_list = db.get_player_list_from_db()
+    name_list = db.get_sorted_player_list_from_db(3)
     print(name_list)  # Display the current list of players
-
-    # Sort the list of players and limit it to the top 5 high scores
-    db.get_sorted_highscore(name_list, 5)
-    print(name_list)  # Display the sorted list of top players
 
     # Prompt the user for a new player's name and score
     player = input("Enter player's name: ").title()
     score = int(input("Enter score: "))
 
     # Add the player's score to the database and confirm success
-    if db.add_player_score(player, score):
+    if db.add_player_to_db(player, score):
         print("Score added successfully!")
