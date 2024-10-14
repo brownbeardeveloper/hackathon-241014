@@ -68,10 +68,9 @@ def game_over(score: int):
 
     # create a rectangular object for the text
     # surface object
-    game_over_rect = game_over_surface.get_rect()
-
-    # setting position of the text
-    game_over_rect.midtop = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
+    game_over_rect = game_over_surface.get_rect(
+        center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
+    )
 
     # blit will draw the text on screen
     SCREEN.blit(game_over_surface, game_over_rect)
@@ -87,27 +86,17 @@ def game_over(score: int):
     quit()
 
 
-def show_score(color, score, font, size):
-    # creating font object score_font
-    score_font = pygame.font.SysFont(font, size)
-
-    # create the display surface object
-    # score_surface
-    score_surface = score_font.render(f"Score : {score}", True, color)
-
-    # create a rectangular object for the text
-    # surface object
-    score_rect = score_surface.get_rect()
-
-    # displaying text
-    SCREEN.blit(score_surface, score_rect)
+def show_score(score):
+    font = pygame.font.SysFont("bahnschrift", 35)
+    score_surface = font.render(f"Score: {score}", True, WHITE)
+    SCREEN.blit(score_surface, (10, 10))  # Display score at top left corner
 
 
 def start():
     # Settings for snake
     snake_position = [100, 50]
     snake_body = [[100, 50], [90, 50], [80, 50], [70, 50]]
-    snake_speed = 10
+    snake_speed = 20  # This is the base speed
 
     # Initalise pygame
     pygame.init()
@@ -180,6 +169,10 @@ def start():
         ):
             score += 10
             fruit_spawn = False
+
+            # Increase the snake's speed for every 10 fruits eaten.
+            if score % 100 == 0:
+                snake_speed += 2  # Increase the speed by 2
         else:
             snake_body.pop()
 
@@ -189,9 +182,12 @@ def start():
                 random.randrange(1, (SCREEN_WIDTH // 10)) * 10,
                 random.randrange(1, (SCREEN_HEIGHT // 10)) * 10,
             ]
+            fruit_spawn = True
 
-        fruit_spawn = True
         SCREEN.fill(BLACK)
+
+        # Display the current score and instructions
+        show_score(score)
 
         for pos in snake_body:
             pygame.draw.rect(SCREEN, GREEN, pygame.Rect(pos[0], pos[1], 10, 10))
@@ -210,7 +206,7 @@ def start():
         # Touching the snake body
         for block in snake_body[1:]:
             if snake_position[0] == block[0] and snake_position[1] == block[1]:
-                game_over()
+                game_over(score)
 
         # Refresh game screen
         pygame.display.update()
