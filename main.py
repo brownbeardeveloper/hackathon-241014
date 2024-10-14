@@ -1,7 +1,5 @@
-# Example file showing a circle moving on screen
 import pygame
 import random
-import time
 from services.firebase import Firebase
 
 # RGB (Red, Green, Blue)
@@ -10,10 +8,6 @@ BLACK = (0, 0, 0)
 RED = (213, 50, 80)
 GREEN = (56, 219, 31)
 BLUE = (50, 153, 213)
-
-# The font what type of writing
-# font_style = pygame.font.SysFont("bahnschrift", 25)
-# score_font = pygame.font.SysFont("comicsansms", 35)
 
 # Screen display
 SCREEN_WIDTH = 1280
@@ -59,31 +53,116 @@ def message(text, color, position):
     pygame.display.update()
 
 
-def game_over(score: int):
+def get_player_name():
+    font = pygame.font.SysFont("bahnschrift", 50)
+    input_box = pygame.Rect(SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2, 600, 50)
+    color_inactive = pygame.Color("lightskyblue3")
+    color_active = pygame.Color("dodgerblue2")
+    color = color_inactive
+    active = False
+    player_name = ""
+    done = False
+
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # If the user clicked on the input_box rect.
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                # Change the current color of the input box.
+                color = color_active if active else color_inactive
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        done = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        player_name = player_name[:-1]
+                    else:
+                        player_name += event.unicode
+
+        SCREEN.fill(BLACK)
+        # Render the player's input text.
+        txt_surface = font.render(player_name, True, WHITE)
+        # Blit the text.
+        SCREEN.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+        # Blit the input box rect.
+        pygame.draw.rect(SCREEN, color, input_box, 2)
+
+        # Display instructions to the player
+        instruction_text = font.render("Enter your name and press Enter", True, WHITE)
+        SCREEN.blit(instruction_text, (SCREEN_WIDTH // 4, SCREEN_HEIGHT // 3))
+
+        pygame.display.flip()
+
+    return player_name
+
+
+def game_over(score: int, player_name: str):
+    # Add the player to database
+    firebase = Firebase()
+    firebase.add_player_to_db(name=player_name, score=score)
+
+    # Get highscore list from database
+    highscore_list = firebase.get_sorted_highscore_list_from_db(5)
+
     # creating font object my_font
     my_font = pygame.font.SysFont("times new roman", 50)
 
-    # creating a text surface on which text
-    # will be drawn
-    game_over_surface = my_font.render("Your Score is : " + str(score), True, RED)
+    # Display the high scores
+    highscore_surface = my_font.render("High Scores:", True, WHITE)
+    highscore_rect = highscore_surface.get_rect(
+        center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50)
+    )
+    SCREEN.blit(highscore_surface, highscore_rect)
+
+    # Render the top 5 high scores
+    for index, player in enumerate(highscore_list):
+        score_surface = my_font.render(
+            f"{index + 1}. {player[0]}: {player[1]}", True, WHITE
+        )
+        score_rect = score_surface.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100 + index * 40)
+        )
+        SCREEN.blit(score_surface, score_rect)
+
+    # creating a text surface on whhich will be drawn
+    game_over_surface = my_font.render(
+        f"{player_name}, your score is: {score}", True, RED
+    )
+    restart_surface = my_font.render("Press R to Restart or Q to Quit", True, WHITE)
 
     # create a rectangular object for the text
     # surface object
     game_over_rect = game_over_surface.get_rect(
         center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
     )
+    restart_rect = restart_surface.get_rect(
+        center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    )
 
-    # blit will draw the text on screen
+    # Blit the game over text and restart instructions on the screen
+    SCREEN.fill(BLACK)  # Clear the screen
     SCREEN.blit(game_over_surface, game_over_rect)
+    SCREEN.blit(restart_surface, restart_rect)
     pygame.display.flip()
 
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
-                start()
-            elif event.key == pygame.K_q:
+    # Wait for player input
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:  # Restart the game with "r"
+                    return True
+                if event.key == pygame.K_q:  # Quit the game with "q"
+                    pygame.quit()
+                    quit()
 
 
 def show_score(score):
@@ -92,12 +171,10 @@ def show_score(score):
     SCREEN.blit(score_surface, (10, 10))  # Display score at top left corner
 
 
-def get_data_from_firebase():
-    firebase_db = Firebase()
-    # firebase_db.read_data()
-
-
 def start():
+    pygame.init()  # Initialize Snake game here
+    player_name = get_player_name()  # Capture player's name before starting the game
+
     # Settings for snake
     snake_position = [100, 50]
     snake_body = [[100, 50], [90, 50], [80, 50], [70, 50]]
@@ -105,7 +182,7 @@ def start():
 
     # Initalise pygame
     pygame.init()
-    get_data_from_firebase()
+    pygame.display.set_caption(f"Snake Game - Player: {player_name}")
 
     # Initialise game window
     pygame.display.set_caption("Snake Game for Hackathon")
@@ -113,7 +190,6 @@ def start():
     # Set pygame setup
     score = 0
     fps = pygame.time.Clock()  # FPS (frames per second) controller
-    running = True
 
     # fruit position
     fruit_position = [
@@ -126,6 +202,7 @@ def start():
     direction = "RIGHT"
     change_direction = direction
 
+    running = True
     while running:
         # handling key events
         for event in pygame.event.get():
@@ -190,6 +267,28 @@ def start():
             ]
             fruit_spawn = True
 
+        # Game Over conditions
+        if (
+            snake_position[0] < 0
+            or snake_position[0] > SCREEN_WIDTH - 10
+            or snake_position[1] < 0
+            or snake_position[1] > SCREEN_HEIGHT - 10
+        ):
+            if game_over(score, player_name):
+                start()  #  Restart the game
+                return
+            else:
+                running = False
+
+        # Colliding with self
+        for block in snake_body[1:]:
+            if snake_position == block:
+                if game_over(score, player_name):
+                    start()
+                    return
+                else:
+                    running = False
+
         SCREEN.fill(BLACK)
 
         # Display the current score and instructions
@@ -203,18 +302,6 @@ def start():
             pygame.Rect(fruit_position[0], fruit_position[1], 10, 10),
         )
 
-        # Game Over conditions
-        if snake_position[0] < 0 or snake_position[0] > SCREEN_WIDTH - 10:
-            game_over(score)
-        if snake_position[1] < 0 or snake_position[1] > SCREEN_HEIGHT - 10:
-            game_over(score)
-
-        # Touching the snake body
-        for block in snake_body[1:]:
-            if snake_position[0] == block[0] and snake_position[1] == block[1]:
-                game_over(score)
-
-        # Refresh game screen
         pygame.display.update()
 
         # Frame Per Second /Refresh Rate
