@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from firebase_admin.exceptions import FirebaseError
 
 
 class Firebase:
@@ -22,14 +23,23 @@ class Firebase:
                                               in Firestore.
         """
         try:
-            # Initialize Firebase
-            cred = credentials.Certificate("hackathon-firebase.json")
-            firebase_admin.initialize_app(cred)
+            # Check if Firebase is already initialized
+            if not firebase_admin._apps:
+                # Initialize Firebase
+                cred = credentials.Certificate("hackathon-firebase.json")
+                firebase_admin.initialize_app(cred)
+
+            # Initialize Firestore DB
             db = firestore.client()
+
+            # Set reference to 'users' collection
             self.users_ref = db.collection("users")
 
-        except Exception as e:
-            print(e)  # TODO: make a better error handling here...
+        except FirebaseError as e:
+            print(f"Firebase-related error: {e}")
+            raise FirebaseError(
+                "An error occurred while connecting to Database. Please try again later."
+            )
 
     def _read_data(self, highscore_list: list):
         """

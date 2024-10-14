@@ -99,11 +99,11 @@ def get_player_name():
 
         pygame.display.flip()
 
-    return player_name
+    return player_name.title()
 
 
 def game_over(score: int, player_name: str):
-    # Add the player to the database
+    # Add this player to the database
     firebase = Firebase()
     firebase.add_player_to_db(name=player_name, score=score)
 
@@ -221,7 +221,7 @@ def start():
                 if event.key == pygame.K_p:
                     pause_game()
                 if event.key == pygame.K_q:
-                    # game_over(score)
+                    game_over(player_name=player_name, score=score)
                     running = False
 
         # If two keys pressed simultaneously
