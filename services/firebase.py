@@ -5,6 +5,22 @@ from firebase_admin import firestore
 
 class Firebase:
     def __init__(self) -> None:
+        """
+        Initialize the Firebase connection and set up the Firestore database.
+
+        This constructor attempts to establish a connection to Firebase using the
+        provided service account credentials. It initializes the Firestore client
+        and sets a reference to the 'users' collection.
+
+        Raises:
+            Exception: If the Firebase initialization fails, an exception is caught
+                        and printed. Consider implementing better error handling
+                        for production use.
+
+        Attributes:
+            users_ref (CollectionReference): A reference to the 'users' collection
+                                              in Firestore.
+        """
         try:
             # Initialize Firebase
             cred = credentials.Certificate("hackathon-firebase.json")
@@ -42,13 +58,56 @@ class Firebase:
                 highscore_list.append((data["name"], data["score"]))
 
     def get_sorted_highscore(self, highscore_list: list, limit: int) -> None:
-        # Sort the highscore list and limit to the top 'limit' entries
+        """
+        Sort the highscore list in descending order and limit it to the top 'limit' entries.
+
+        Args:
+            highscore_list (list): A list of player tuples, where each tuple
+                                   contains player information and the score.
+            limit (int): The maximum number of high scores to retain in the list.
+
+        Returns:
+            None: This method modifies the highscore_list in place.
+        """
+        # Sort the highscore list in descending order based on player scores
         highscore_list.sort(key=self.get_score, reverse=True)
 
+        # Limit the list to the top 'limit' entries
+        del highscore_list[limit:]
+
     def get_score(self, player: tuple):
+        """
+        Retrieve the score of a player.
+
+        Args:
+            player (tuple): A tuple representing the player, where
+                            the second element contains the player's score.
+
+        Returns:
+            The score of the player (usually an integer or float).
+        """
         return player[1]
 
     def add_player_score(self, name: str, score: int) -> bool:
+        """
+        Add a player's score to the Firestore database.
+
+        This method attempts to add a new player entry with the given name and score
+        to the 'users' collection in Firestore.
+
+        Args:
+            name (str): The name of the player to be added.
+            score (int): The score of the player to be added.
+
+        Returns:
+            bool: True if the player score was added successfully;
+                  False if an exception occurred during the process.
+
+        Raises:
+            Exception: If there is an error during the addition of the player score,
+                        it is caught and printed. Consider implementing better error
+                        handling for production use.
+        """
         try:
             self.users_ref.add({"name": name, "score": score})
             return True
