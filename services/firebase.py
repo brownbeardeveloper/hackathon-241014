@@ -57,7 +57,7 @@ class Firebase:
             if "name" in data and "score" in data:
                 highscore_list.append((data["name"], data["score"]))
 
-    def get_sorted_player_list_from_db(self, limit: int):
+    def get_sorted_highscore_list_from_db(self, limit: int):
         """
         Retrieve and sort a list of players from the database.
 
@@ -140,8 +140,8 @@ if __name__ == "__main__":
     db = Firebase()
 
     # Retrieve the list of player names and scores from the database
-    name_list = db.get_sorted_player_list_from_db(3)
-    print(name_list)  # Display the current list of players
+    highscore_list = db.get_sorted_highscore_list_from_db(3)
+    print(highscore_list)  # Display the current list of players
 
     # Prompt the user for a new player's name and score
     player = input("Enter player's name: ").title()
