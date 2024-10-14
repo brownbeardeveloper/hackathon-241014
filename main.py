@@ -2,6 +2,7 @@
 import pygame
 import random
 import time
+from services.firebase import Firebase
 
 # RGB (Red, Green, Blue)
 WHITE = (255, 255, 255)
@@ -76,20 +77,24 @@ def game_over(score: int):
     SCREEN.blit(game_over_surface, game_over_rect)
     pygame.display.flip()
 
-    # after 2 seconds we will quit the program
-    time.sleep(5)
-
-    # deactivating pygame library
-    pygame.quit()
-
-    # quit the program
-    quit()
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                start()
+            elif event.key == pygame.K_q:
+                pygame.quit()
+                quit()
 
 
 def show_score(score):
     font = pygame.font.SysFont("bahnschrift", 35)
     score_surface = font.render(f"Score: {score}", True, WHITE)
     SCREEN.blit(score_surface, (10, 10))  # Display score at top left corner
+
+
+def get_data_from_firebase():
+    firebase_db = Firebase()
+    # firebase_db.read_data()
 
 
 def start():
@@ -100,6 +105,7 @@ def start():
 
     # Initalise pygame
     pygame.init()
+    get_data_from_firebase()
 
     # Initialise game window
     pygame.display.set_caption("Snake Game for Hackathon")
